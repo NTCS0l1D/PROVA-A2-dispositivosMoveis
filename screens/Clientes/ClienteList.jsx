@@ -3,20 +3,25 @@ import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { Card, Title, Paragraph, FAB, IconButton, useTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Componente responsável por exibir a lista de clientes cadastrados
 export default function ClienteList({ navigation }) {
+  // Estado que armazena os clientes carregados do AsyncStorage
   const [clientes, setClientes] = useState([]);
-  const theme = useTheme();
+  const theme = useTheme(); // Hook do Paper para usar cores e temas
 
+  // useEffect que recarrega os dados sempre que a tela ganha foco
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadClientes);
     return unsubscribe;
   }, [navigation]);
 
+  // Função que busca os dados salvos no AsyncStorage e atualiza o estado
   async function loadClientes() {
     const data = await AsyncStorage.getItem('clientes');
     if (data) setClientes(JSON.parse(data));
   }
 
+  // Função chamada ao pressionar o botão de exclusão
   async function handleDelete(index) {
     Alert.alert(
       'Confirmação',
@@ -26,6 +31,7 @@ export default function ClienteList({ navigation }) {
         {
           text: 'Excluir',
           onPress: async () => {
+            // Remove o cliente do array e atualiza o armazenamento
             const updatedClientes = clientes.filter((_, i) => i !== index);
             setClientes(updatedClientes);
             await AsyncStorage.setItem('clientes', JSON.stringify(updatedClientes));
@@ -37,6 +43,7 @@ export default function ClienteList({ navigation }) {
     );
   }
 
+  // Função que renderiza cada item da lista
   const renderItem = ({ item, index }) => (
     <Card style={styles.card}>
       <Card.Content>
@@ -46,6 +53,8 @@ export default function ClienteList({ navigation }) {
         <Paragraph style={styles.paragraph}>CPF: {item.cpf}</Paragraph>
         <Paragraph style={styles.paragraph}>Nascimento: {item.nascimento}</Paragraph>
       </Card.Content>
+
+      {/* Botões de editar e excluir no final do card */}
       <Card.Actions style={styles.actions}>
         <IconButton
           icon="pencil"
@@ -65,12 +74,15 @@ export default function ClienteList({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Lista dos clientes */}
       <FlatList
         data={clientes}
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
       />
+
+      {/* Botão flutuante para adicionar novo cliente */}
       <FAB
         icon="plus"
         onPress={() => navigation.navigate('ClienteForm')}
@@ -81,6 +93,7 @@ export default function ClienteList({ navigation }) {
   );
 }
 
+// Estilos visuais da tela
 const styles = StyleSheet.create({
   container: {
     flex: 1,

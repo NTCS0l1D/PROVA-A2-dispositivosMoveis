@@ -7,9 +7,11 @@ import * as Yup from 'yup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TextInputMask } from 'react-native-masked-text';
 
+// Componente de cadastro e edição de clientes
 export default function ClienteForm({ navigation, route }) {
-  const [index, setIndex] = useState(null);
+  const [index, setIndex] = useState(null); // Estado que armazena o índice do cliente em edição (caso exista)
 
+  // Esquema de validação usando Yup
   const schema = Yup.object().shape({
     nome: Yup.string().required('Nome é obrigatório'),
     email: Yup.string().email('Email inválido').required('Email é obrigatório'),
@@ -24,6 +26,7 @@ export default function ClienteForm({ navigation, route }) {
       .required('Nascimento é obrigatório'),
   });
 
+  // Hook do React Hook Form, integrando com Yup para validação
   const {
     control,
     handleSubmit,
@@ -33,40 +36,44 @@ export default function ClienteForm({ navigation, route }) {
     resolver: yupResolver(schema),
   });
 
+  // Carrega dados do cliente em edição, se houver
   useEffect(() => {
     if (route.params?.index !== undefined) {
       loadCliente(route.params.index);
     }
   }, [route.params]);
 
+  // Função para buscar cliente salvo no AsyncStorage e preencher o formulário
   async function loadCliente(idx) {
     const data = await AsyncStorage.getItem('clientes');
     if (data) {
       const clientes = JSON.parse(data);
       const cliente = clientes[idx];
-      setIndex(idx);
+      setIndex(idx); // Guarda o índice para atualizar posteriormente
       for (const key in cliente) {
-        setValue(key, cliente[key]);
+        setValue(key, cliente[key]); // Preenche os campos
       }
     }
   }
 
+  // Função chamada ao submeter o formulário
   async function onSubmit(cliente) {
     const data = await AsyncStorage.getItem('clientes');
     let clientes = data ? JSON.parse(data) : [];
 
     if (index !== null) {
-      clientes[index] = cliente;
+      clientes[index] = cliente; // Atualiza cliente existente
     } else {
-      clientes.push(cliente);
+      clientes.push(cliente); // Adiciona novo cliente
     }
 
-    await AsyncStorage.setItem('clientes', JSON.stringify(clientes));
-    navigation.goBack();
+    await AsyncStorage.setItem('clientes', JSON.stringify(clientes)); // Salva no AsyncStorage
+    navigation.goBack(); // Volta para a tela anterior
   }
 
   return (
     <Provider>
+      {/* Componente que evita sobreposição do teclado */}
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -75,6 +82,7 @@ export default function ClienteForm({ navigation, route }) {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Cadastro de Cliente</Text>
 
+          {/* Campo Nome */}
           <Controller
             control={control}
             name="nome"
@@ -93,6 +101,7 @@ export default function ClienteForm({ navigation, route }) {
             )}
           />
 
+          {/* Campo Email */}
           <Controller
             control={control}
             name="email"
@@ -112,6 +121,7 @@ export default function ClienteForm({ navigation, route }) {
             )}
           />
 
+          {/* Campo Telefone com máscara */}
           <Controller
             control={control}
             name="telefone"
@@ -139,6 +149,7 @@ export default function ClienteForm({ navigation, route }) {
             )}
           />
 
+          {/* Campo CPF com máscara */}
           <Controller
             control={control}
             name="cpf"
@@ -161,6 +172,7 @@ export default function ClienteForm({ navigation, route }) {
             )}
           />
 
+          {/* Campo Data de Nascimento com máscara */}
           <Controller
             control={control}
             name="nascimento"
@@ -184,9 +196,12 @@ export default function ClienteForm({ navigation, route }) {
             )}
           />
 
+          {/* Botão de salvar */}
           <Button mode="contained" onPress={handleSubmit(onSubmit)} style={styles.button}>
             Salvar
           </Button>
+
+          {/* Botão de cancelar */}
           <Button onPress={() => navigation.goBack()} style={styles.cancelButton}>
             Cancelar
           </Button>
@@ -196,6 +211,7 @@ export default function ClienteForm({ navigation, route }) {
   );
 }
 
+// Estilos da tela
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -6,6 +6,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 
 export default function MotoForm({ navigation, route }) {
+  // Estado para armazenar os dados da moto
   const [moto, setMoto] = useState({
     codigo: '',
     modelo: '',
@@ -16,14 +17,16 @@ export default function MotoForm({ navigation, route }) {
     observacoes: '',
   });
 
-  const [index, setIndex] = useState(null);
+  const [index, setIndex] = useState(null); // Índice da moto sendo editada
 
+  // Carrega os dados da moto se estiver em modo de edição
   useEffect(() => {
     if (route.params?.index !== undefined) {
       loadMoto(route.params.index);
     }
   }, [route.params]);
 
+  // Busca a moto no AsyncStorage e atualiza o estado
   async function loadMoto(idx) {
     const data = await AsyncStorage.getItem('motos');
     if (data) {
@@ -33,6 +36,7 @@ export default function MotoForm({ navigation, route }) {
     }
   }
 
+  // Schema de validação com Yup
   const MotoSchema = Yup.object().shape({
     modelo: Yup.string().required('Informe o modelo'),
     ano: Yup.string()
@@ -49,6 +53,7 @@ export default function MotoForm({ navigation, route }) {
     observacoes: Yup.string().required('Informe as observações'),
   });
 
+  // Gera um novo código automático para a moto
   async function gerarNovoCodigo() {
     const data = await AsyncStorage.getItem('motos');
     let motos = data ? JSON.parse(data) : [];
@@ -58,19 +63,20 @@ export default function MotoForm({ navigation, route }) {
     return (maiorCodigo + 1).toString();
   }
 
+  // Salva ou atualiza a moto no AsyncStorage
   async function save(values) {
     const data = await AsyncStorage.getItem('motos');
     let motos = data ? JSON.parse(data) : [];
 
     if (index !== null) {
-      motos[index] = values;
+      motos[index] = values; // Atualização
     } else {
-      values.codigo = await gerarNovoCodigo();
-      motos.push(values);
+      values.codigo = await gerarNovoCodigo(); // Novo código
+      motos.push(values); // Inserção
     }
 
     await AsyncStorage.setItem('motos', JSON.stringify(motos));
-    navigation.goBack();
+    navigation.goBack(); // Volta para a tela de listagem
   }
 
   return (
@@ -83,6 +89,7 @@ export default function MotoForm({ navigation, route }) {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Cadastro de Moto:</Text>
 
+          {/* Formulário controlado pelo Formik */}
           <Formik
             enableReinitialize
             initialValues={moto}
@@ -91,6 +98,7 @@ export default function MotoForm({ navigation, route }) {
           >
             {({ handleChange, handleBlur, handleSubmit, setFieldValue, values, errors, touched }) => (
               <>
+                {/* Campo Código (somente leitura) */}
                 <TextInput
                   label="Código"
                   value={values.codigo}
@@ -102,7 +110,7 @@ export default function MotoForm({ navigation, route }) {
                   {errors.codigo}
                 </HelperText>
 
-
+                {/* Campo Modelo */}
                 <TextInput
                   label="Modelo"
                   value={values.modelo}
@@ -116,6 +124,7 @@ export default function MotoForm({ navigation, route }) {
                   {errors.modelo}
                 </HelperText>
 
+                {/* Campo Ano (com filtro de apenas 4 dígitos) */}
                 <TextInput
                   label="Ano"
                   value={values.ano}
@@ -132,6 +141,7 @@ export default function MotoForm({ navigation, route }) {
                   {errors.ano}
                 </HelperText>
 
+                {/* Campo Placa (com formatação automática) */}
                 <TextInput
                   label="Placa"
                   value={values.placa}
@@ -152,6 +162,7 @@ export default function MotoForm({ navigation, route }) {
                   {errors.placa}
                 </HelperText>
 
+                {/* Campo Cor */}
                 <TextInput
                   label="Cor"
                   value={values.cor}
@@ -165,6 +176,7 @@ export default function MotoForm({ navigation, route }) {
                   {errors.cor}
                 </HelperText>
 
+                {/* Campo Chassi */}
                 <TextInput
                   label="Chassi"
                   value={values.chassi}
@@ -178,6 +190,7 @@ export default function MotoForm({ navigation, route }) {
                   {errors.chassi}
                 </HelperText>
 
+                {/* Campo Observações */}
                 <TextInput
                   label="Observações"
                   value={values.observacoes}
@@ -193,9 +206,12 @@ export default function MotoForm({ navigation, route }) {
                   {errors.observacoes}
                 </HelperText>
 
+                {/* Botão Salvar */}
                 <Button mode="contained" onPress={handleSubmit} style={styles.button}>
                   Salvar
                 </Button>
+
+                {/* Botão Cancelar */}
                 <Button onPress={() => navigation.goBack()} style={styles.cancelButton}>
                   Cancelar
                 </Button>
@@ -208,6 +224,7 @@ export default function MotoForm({ navigation, route }) {
   );
 }
 
+// Estilos da tela de formulário
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -227,6 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 6,
     elevation: 2,
+    marginBottom: 8,
   },
   button: {
     marginTop: 12,

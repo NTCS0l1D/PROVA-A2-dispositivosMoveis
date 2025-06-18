@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, View, ScrollView, TouchableOpacity, Text, StyleSheet,} from 'react-native';
-import {  TextInput, Button, HelperText, List, Menu, Provider,} from 'react-native-paper';
+import { TextInput, Button, HelperText, List, Menu, Provider} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Componente principal do formulário de cadastro de serviço
 export default function ServicoForm({ navigation, route }) {
+  // Estado inicial do formulário
   const [servico, setServico] = useState({
     cliente: '',
     moto: '',
@@ -15,36 +17,40 @@ export default function ServicoForm({ navigation, route }) {
     valor: '',
   });
 
-  const [index, setIndex] = useState(null);
-  const [errors, setErrors] = useState({});
+  const [index, setIndex] = useState(null); // Index do serviço (para edição)
+  const [errors, setErrors] = useState({}); // Armazena erros de validação
 
-  const [motos, setMotos] = useState([]);
-  const [clientes, setClientes] = useState([]);
-  const [placaSugestoes, setPlacaSugestoes] = useState([]);
-  const [clienteSugestoes, setClienteSugestoes] = useState([]);
+  const [motos, setMotos] = useState([]); // Lista de motos salvas
+  const [clientes, setClientes] = useState([]); // Lista de clientes salvos
+  const [placaSugestoes, setPlacaSugestoes] = useState([]); // Sugestões de placas
+  const [clienteSugestoes, setClienteSugestoes] = useState([]); // Sugestões de clientes
 
-  const [statusMenuVisible, setStatusMenuVisible] = useState(false);
+  const [statusMenuVisible, setStatusMenuVisible] = useState(false); // Visibilidade do menu de status
 
+  // Carrega dados ao abrir o formulário
   useEffect(() => {
     loadMotos();
     loadClientes();
     if (route.params?.index !== undefined) {
-      loadServico(route.params.index);
+      loadServico(route.params.index); // Carrega serviço para edição, se aplicável
     }
   }, [route.params]);
 
+  // Carrega a lista de motos do AsyncStorage
   async function loadMotos() {
     const data = await AsyncStorage.getItem('motos');
     const listaMotos = data ? JSON.parse(data) : [];
     setMotos(listaMotos);
   }
 
+  // Carrega a lista de clientes do AsyncStorage
   async function loadClientes() {
     const data = await AsyncStorage.getItem('clientes');
     const listaClientes = data ? JSON.parse(data) : [];
     setClientes(listaClientes);
   }
 
+  // Carrega um serviço específico para edição
   async function loadServico(idx) {
     const data = await AsyncStorage.getItem('servicos');
     if (data) {
@@ -54,6 +60,7 @@ export default function ServicoForm({ navigation, route }) {
     }
   }
 
+  // Validação dos campos obrigatórios
   function validate() {
     const newErrors = {};
     if (!servico.cliente) newErrors.cliente = 'Informe o cliente';
@@ -69,6 +76,7 @@ export default function ServicoForm({ navigation, route }) {
     return Object.keys(newErrors).length === 0;
   }
 
+  // Salva ou atualiza o serviço no AsyncStorage
   async function save() {
     if (!validate()) return;
 
@@ -76,15 +84,16 @@ export default function ServicoForm({ navigation, route }) {
     let servicos = data ? JSON.parse(data) : [];
 
     if (index !== null) {
-      servicos[index] = servico;
+      servicos[index] = servico; // Atualiza
     } else {
-      servicos.push(servico);
+      servicos.push(servico); // Novo
     }
 
     await AsyncStorage.setItem('servicos', JSON.stringify(servicos));
-    navigation.goBack();
+    navigation.goBack(); // Volta para tela anterior
   }
 
+  // Ao digitar a placa, filtra sugestões e preenche moto se existir
   function onChangePlaca(text) {
     setServico({ ...servico, placa: text });
 
@@ -101,6 +110,7 @@ export default function ServicoForm({ navigation, route }) {
     }
   }
 
+  // Ao selecionar uma placa da sugestão
   function selecionarPlaca(placa) {
     setServico((s) => ({ ...s, placa }));
 
@@ -112,6 +122,7 @@ export default function ServicoForm({ navigation, route }) {
     setPlacaSugestoes([]);
   }
 
+  // Ao digitar o cliente, exibe sugestões
   function onChangeCliente(text) {
     setServico({ ...servico, cliente: text });
 
@@ -121,11 +132,13 @@ export default function ServicoForm({ navigation, route }) {
     setClienteSugestoes(sugeridas);
   }
 
+  // Ao selecionar cliente da sugestão
   function selecionarCliente(nome) {
     setServico((s) => ({ ...s, cliente: nome }));
     setClienteSugestoes([]);
   }
 
+  // Máscara para campo de data no formato DD/MM/AAAA
   function mascaraData(text) {
     let cleaned = text.replace(/\D/g, '');
     if (cleaned.length > 2) {
@@ -144,12 +157,10 @@ export default function ServicoForm({ navigation, route }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 2 : 0}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Cadastro de Serviço:</Text>
 
+          {/* Campo Cliente com sugestões */}
           <TextInput
             label="Cliente"
             value={servico.cliente}
@@ -161,17 +172,13 @@ export default function ServicoForm({ navigation, route }) {
           <HelperText type="error" visible={!!errors.cliente}>
             {errors.cliente}
           </HelperText>
-
           {clienteSugestoes.map((c, idx) => (
             <TouchableOpacity key={idx} onPress={() => selecionarCliente(c.nome)}>
-              <List.Item
-                title={c.nome}
-                description={c.telefone}
-                style={styles.suggestionItem}
-              />
+              <List.Item title={c.nome} description={c.telefone} style={styles.suggestionItem} />
             </TouchableOpacity>
           ))}
 
+          {/* Campo Placa com sugestões */}
           <TextInput
             label="Placa"
             value={servico.placa}
@@ -183,17 +190,13 @@ export default function ServicoForm({ navigation, route }) {
           <HelperText type="error" visible={!!errors.placa}>
             {errors.placa}
           </HelperText>
-
           {placaSugestoes.map((m, idx) => (
             <TouchableOpacity key={idx} onPress={() => selecionarPlaca(m.placa)}>
-              <List.Item
-                title={m.placa}
-                description={m.modelo}
-                style={styles.suggestionItem}
-              />
+              <List.Item title={m.placa} description={m.modelo} style={styles.suggestionItem} />
             </TouchableOpacity>
           ))}
 
+          {/* Campo Moto (pode ser preenchido automaticamente ou manual) */}
           <TextInput
             label="Moto"
             value={servico.moto}
@@ -206,6 +209,7 @@ export default function ServicoForm({ navigation, route }) {
             {errors.moto}
           </HelperText>
 
+          {/* Campo Kilometragem */}
           <TextInput
             label="Kilometragem"
             value={servico.kilometragem}
@@ -219,6 +223,7 @@ export default function ServicoForm({ navigation, route }) {
             {errors.kilometragem}
           </HelperText>
 
+          {/* Campo Data com máscara */}
           <TextInput
             label="Data"
             value={servico.data}
@@ -235,6 +240,7 @@ export default function ServicoForm({ navigation, route }) {
             {errors.data}
           </HelperText>
 
+          {/* Campo Descrição */}
           <TextInput
             label="Descrição"
             value={servico.descricao}
@@ -249,6 +255,7 @@ export default function ServicoForm({ navigation, route }) {
             {errors.descricao}
           </HelperText>
 
+          {/* Menu suspenso para status do serviço */}
           <View style={{ marginBottom: 8 }}>
             <Menu
               visible={statusMenuVisible}
@@ -284,6 +291,7 @@ export default function ServicoForm({ navigation, route }) {
             </HelperText>
           </View>
 
+          {/* Campo Valor */}
           <TextInput
             label="Valor"
             value={servico.valor}
@@ -297,10 +305,10 @@ export default function ServicoForm({ navigation, route }) {
             {errors.valor}
           </HelperText>
 
+          {/* Botões Salvar e Cancelar */}
           <Button mode="contained" onPress={save} style={styles.button}>
             Salvar
           </Button>
-
           <Button onPress={() => navigation.goBack()} style={styles.button}>
             Cancelar
           </Button>
@@ -310,7 +318,7 @@ export default function ServicoForm({ navigation, route }) {
   );
 }
 
-
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -341,7 +349,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ff6f00',
-    color: '#fff'
+    color: '#fff',
   },
   suggestionItem: {
     backgroundColor: '#fff',

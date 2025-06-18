@@ -3,20 +3,24 @@ import { View, FlatList, Alert, StyleSheet } from 'react-native';
 import { Card, Title, Paragraph, FAB, IconButton, useTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Tela que exibe a lista de motos cadastradas
 export default function MotoList({ navigation }) {
-  const [motos, setMotos] = useState([]);
-  const theme = useTheme();
+  const [motos, setMotos] = useState([]); // Estado que armazena a lista de motos
+  const theme = useTheme(); // Hook do React Native Paper para acessar o tema
 
+  // useEffect que atualiza a lista de motos sempre que a tela ganha foco
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadMotos);
     return unsubscribe;
   }, [navigation]);
 
+  // Função que carrega as motos do AsyncStorage
   async function loadMotos() {
     const data = await AsyncStorage.getItem('motos');
     if (data) setMotos(JSON.parse(data));
   }
 
+  // Função que lida com a exclusão de uma moto
   async function handleDelete(index) {
     Alert.alert(
       'Confirmação',
@@ -26,9 +30,9 @@ export default function MotoList({ navigation }) {
         {
           text: 'Excluir',
           onPress: async () => {
-            const updatedMotos = motos.filter((_, i) => i !== index);
-            setMotos(updatedMotos);
-            await AsyncStorage.setItem('motos', JSON.stringify(updatedMotos));
+            const updatedMotos = motos.filter((_, i) => i !== index); // Remove a moto da lista
+            setMotos(updatedMotos); // Atualiza o estado
+            await AsyncStorage.setItem('motos', JSON.stringify(updatedMotos)); // Salva as mudanças
           },
           style: 'destructive',
         },
@@ -37,6 +41,7 @@ export default function MotoList({ navigation }) {
     );
   }
 
+  // Função que renderiza cada item da lista de motos
   const renderItem = ({ item, index }) => (
     <Card style={styles.card}>
       <Card.Content>
@@ -48,12 +53,14 @@ export default function MotoList({ navigation }) {
         <Paragraph style={styles.paragraph}>Observações: {item.observacoes}</Paragraph>
       </Card.Content>
       <Card.Actions style={styles.actions}>
+        {/* Botão de edição */}
         <IconButton
           icon="pencil"
           size={22}
           onPress={() => navigation.navigate('MotoForm', { index })}
           iconColor="#ff6f00"
         />
+        {/* Botão de exclusão */}
         <IconButton
           icon="delete"
           size={22}
@@ -66,12 +73,15 @@ export default function MotoList({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Lista de motos renderizada com FlatList */}
       <FlatList
         data={motos}
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
       />
+
+      {/* Botão flutuante para adicionar nova moto */}
       <FAB
         icon="plus"
         onPress={() => navigation.navigate('MotoForm')}
@@ -82,10 +92,11 @@ export default function MotoList({ navigation }) {
   );
 }
 
+// Estilização da tela
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#000', // Fundo escuro
   },
   listContent: {
     paddingBottom: 100,
